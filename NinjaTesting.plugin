@@ -1,0 +1,8 @@
+{
+  "module": "ninja_testing",
+  "class": "NinjaTesting",
+  "authors": "Martin Gaitán - machinalis.com",
+  "version": "0.1",
+  "url": "https://github.com/machinalis/ninja-testing-plugin",
+  "description": "Allow run your tests from ninja"
+}
