@@ -16,7 +16,7 @@ from pdb4qt import set_trace
 import nose
 from nose.loader import TestLoader
 from ninja_nose_plugin import NinjaNosePlugin
-
+from multiprocessing import Process, Queue
 
 class TreeResultWidget(QTreeWidget):
 
@@ -47,7 +47,6 @@ class FindInFilesRootItem(QTreeWidgetItem):
 class NinjaTesting(QWidget, plugin.Plugin):
 
     def initialize(self):
-
         self._explorer_container = explorer_container.ExplorerContainer()
         self.misc_s = self.locator.get_service('misc')
         self.toolbar_s = self.locator.get_service('toolbar')
@@ -65,13 +64,24 @@ class NinjaTesting(QWidget, plugin.Plugin):
                                      self)
         self.action_run_tests.triggered.connect(self.run_tests)
         self.toolbar_s.add_action(self.action_run_tests)
+        self.q = Queue()
 
     def run_tests(self):
         project_path = self._explorer_container.get_actual_project()
         loader = TestLoader(workingDir=project_path)
-        set_trace()
-        nose.main(testLoader=loader, addplugins=[NinjaNosePlugin()])
-
+        kw = {'testLoader': loader, 'addplugins': [NinjaNosePlugin(q=self.q)]}
+        p = Process(target=nose.main, kwargs=kw)
+        p.start()
+        while True:
+            try:
+                data = self.q.get()
+            except IOError:
+                continue
+            if data == 'end':
+                break
+            else:
+                print data
+        p.join()
 
     def finish(self):
         pass

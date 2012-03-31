@@ -29,6 +29,10 @@ def extract_conflictive_lines(tb, limit=None, dirname=None):
 class NinjaNosePlugin(Plugin):
     name = 'ninja'
 
+    def __init__(self, *args, **kwargs):
+        self.q = kwargs.pop('q', None)
+        super(NinjaNosePlugin, self).__init__(*args, **kwargs)
+
     def options(self, parser, env=os.environ):
         super(NinjaNosePlugin, self).options(parser, env=env)
 
@@ -38,10 +42,13 @@ class NinjaNosePlugin(Plugin):
 
     def addFailure(self, test, err):
         conflict = (test.id(), extract_conflictive_lines(err[2]))
-        import ipdb;ipdb.set_trace()
+        self.q.put(confict)
         #return conflict to update results widget
 
     def addError(self, test, err):
         conflict = (test.id(), extract_conflictive_lines(err[2]))
         import ipdb;ipdb.set_trace()
         #return conflict to update results widget
+
+    def finalize(self, result):
+        self.q.put('end')
